@@ -30,7 +30,8 @@ jobs:
           import ast, sys
           from pathlib import Path
           STDLIB = sys.stdlib_module_names
-          LOCAL = {p.stem for p in (ROOT := Path("skills/corkboard/script")).glob("*.py")}
+          ROOT = Path("skills/corkboard/script")
+          LOCAL = {p.stem for p in ROOT.glob("*.py")}
           bad = []
           for f in ROOT.glob("*.py"):
               tree = ast.parse(f.read_text())

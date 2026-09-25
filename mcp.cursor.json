@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "corkboard": {
+      "type": "http",
+      "url": "https://corkboard.wiki/mcp"
+    }
+  }
+}

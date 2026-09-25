@@ -1,0 +1,31 @@
+{
+  "name": "corkboard",
+  "displayName": "Corkboard",
+  "version": "1.0.0",
+  "description": "Corkboard wiki integration: MCP server tools for reading, writing, and searching your workspace, plus a CLI skill for surgical page edits, media uploads, and wiki gardening.",
+  "author": {
+    "name": "BoldBlack AI",
+    "email": "hello@corkboard.wiki"
+  },
+  "homepage": "https://corkboard.wiki/docs/mcp",
+  "repository": "https://github.com/boldblackai/corkboard-plugin",
+  "license": "MIT",
+  "keywords": [
+    "corkboard",
+    "wiki",
+    "mcp",
+    "knowledge",
+    "documentation",
+    "notes",
+    "search"
+  ],
+  "category": "integrations",
+  "tags": [
+    "corkboard",
+    "wiki",
+    "mcp",
+    "knowledge-base"
+  ],
+  "logo": "assets/logo.svg",
+  "mcpServers": "./mcp.cursor.json"
+}

@@ -75,9 +75,16 @@ Full CLI reference: [`skills/corkboard/SKILL.md`](skills/corkboard/SKILL.md).
 
 ```bash
 python3 scripts/validate.py    # validate manifests + skill frontmatter
+
+# vendored-skill test suite (from boldblackai/corkboard-skill)
+cd skills/corkboard
+python3 tests/test_pages_logic.py            # + 3 more test_*.py
+python3 tests/mock_server.py --port 8765 &   # stdlib mock of API v1
+python3 tests/smoke_matrix.py --port 8765    # 43-command CLI matrix
 ```
 
-CI runs the validator on every push and pull request.
+CI runs the validator, a stdlib-only import audit over script + tests,
+the four unit suites, and the mock-server command matrix on every push.
 
 The `skills/corkboard/` subtree is vendored from
 [boldblackai/corkboard-skill](https://github.com/boldblackai/corkboard-skill).

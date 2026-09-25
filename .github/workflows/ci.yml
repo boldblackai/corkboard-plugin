@@ -31,9 +31,11 @@ jobs:
           from pathlib import Path
           STDLIB = sys.stdlib_module_names
           ROOT = Path("skills/corkboard/script")
-          LOCAL = {p.stem for p in ROOT.glob("*.py")}
+          TESTS = Path("skills/corkboard/tests")
+          ALL = list(ROOT.glob("*.py")) + list(TESTS.glob("*.py"))
+          LOCAL = {p.stem for p in ALL}
           bad = []
-          for f in ROOT.glob("*.py"):
+          for f in ALL:
               tree = ast.parse(f.read_text())
               for node in ast.walk(tree):
                   if isinstance(node, ast.Import):
@@ -57,3 +59,25 @@ jobs:
           env -u CORKBOARD_TOKEN python3 script/corkboard.py me > /tmp/out.txt 2>&1 && rc=0 || rc=$?
           grep -q "CORKBOARD_TOKEN" /tmp/out.txt || { echo "expected missing-token error, got:"; cat /tmp/out.txt; exit 1; }
           echo "no-token guard OK"
+
+      # ------------------------------------------------------------------
+      # Vendored-skill test suite (from boldblackai/corkboard-skill)
+      # ------------------------------------------------------------------
+      - name: Unit tests (vendored skill)
+        run: |
+          cd skills/corkboard
+          python3 tests/test_pages_logic.py
+          python3 tests/test_collections_logic.py
+          python3 tests/test_workspace_resolution.py
+          python3 tests/test_client_config.py
+
+      - name: Mock-server command matrix (vendored skill)
+        run: |
+          cd skills/corkboard
+          python3 tests/mock_server.py --port 8765 &
+          MOCK_PID=$!
+          sleep 1
+          python3 tests/smoke_matrix.py --port 8765
+          SMOKE_EXIT=$?
+          kill $MOCK_PID 2>/dev/null
+          exit $SMOKE_EXIT

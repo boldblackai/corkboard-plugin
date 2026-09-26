@@ -29,6 +29,19 @@ After install, trigger any Corkboard tool (for example *list pages*) and
 complete the OAuth consent screen. The requested scope is `mcp:read` for
 read-only use; agents that write pages need `mcp:write` as well.
 
+## Install (Claude Code)
+
+This repository doubles as a Claude Code plugin marketplace:
+
+```bash
+claude plugin marketplace add boldblackai/corkboard-plugin
+claude plugin install corkboard@corkboard-plugin
+```
+
+The MCP server connects as a remote connector (`/mcp`) — approve the OAuth
+prompt on first use. The skill runs as `/corkboard:corkboard`; the CLI half
+reads `CORKBOARD_TOKEN` from the environment.
+
 ## Install (other agents)
 
 The skill half is portable to any agent that supports the Agent Skills format
@@ -51,6 +64,10 @@ corkboard-plugin/
 ├── .cursor-plugin/
 │   └── plugin.json           # Cursor plugin manifest (marketplace metadata)
 ├── mcp.cursor.json           # Cursor MCP config (referenced by manifest)
+├── .claude-plugin/
+│   ├── plugin.json           # Claude Code plugin manifest
+│   └── marketplace.json      # makes this repo a Claude Code marketplace
+├── .mcp.json                 # Claude Code MCP config (remote connector)
 ├── skills/
 │   └── corkboard/
 │       ├── SKILL.md          # vendored from boldblackai/corkboard-skill

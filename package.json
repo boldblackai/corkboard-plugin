@@ -3,7 +3,7 @@
   "displayName": "Corkboard",
   "description": "Corkboard wiki integration: connect your agent to your Corkboard workspace through the remote MCP server, plus the bundled CLI skill for page edits, media uploads, and wiki gardening.",
   "version": "0.1.0",
-  "publisher": "boldblackai",
+  "publisher": "boldblack",
   "license": "MIT",
   "engines": {
     "vscode": "^1.101.0"

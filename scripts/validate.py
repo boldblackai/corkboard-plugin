@@ -14,6 +14,22 @@ ERRORS: list[str] = []
 
 PLUGIN_NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+PUBLISHER_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
+VSCODE_RANGE_RE = re.compile(r"^[\^~]?\d+\.\d+\.\d+$")
+
+# VS Code / Open VSX extension manifest (root package.json)
+EXT_MANIFEST_REQUIRED_STR_FIELDS = (
+    "name",
+    "displayName",
+    "description",
+    "version",
+    "publisher",
+    "license",
+)
+MCP_PROVIDER_ID = "corkboardMcpProvider"
+MCP_SERVER_URI = "https://corkboard.wiki/mcp"
+MCP_PROVIDER_SOURCE = "src/extension.ts"
 
 
 def err(msg: str) -> None:
@@ -32,7 +48,117 @@ def load_json(rel: str) -> dict:
         return {}
 
 
+def package_manifest_errors(root: Path) -> list[str]:
+    """Validate the VS Code / Open VSX extension manifest at <root>/package.json.
+
+    Returns a list of human-readable errors (empty when the manifest is valid).
+    """
+    errors: list[str] = []
+
+    def add(msg: str) -> None:
+        errors.append(msg)
+
+    path = root / "package.json"
+    if not path.is_file():
+        return ["package.json: missing (VS Code extension manifest)"]
+    try:
+        pkg = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        return [f"package.json: invalid JSON: {exc}"]
+    if not isinstance(pkg, dict):
+        return ["package.json: manifest must be a JSON object"]
+
+    for field in EXT_MANIFEST_REQUIRED_STR_FIELDS:
+        value = pkg.get(field)
+        if not isinstance(value, str) or not value.strip():
+            add(f"package.json: missing or non-string {field}")
+
+    name = pkg.get("name")
+    if isinstance(name, str) and not PLUGIN_NAME_RE.match(name):
+        add(f"package.json: invalid name {name!r}")
+    publisher = pkg.get("publisher")
+    if isinstance(publisher, str) and not PUBLISHER_RE.match(publisher):
+        add(f"package.json: invalid publisher {publisher!r}")
+    version = pkg.get("version")
+    if isinstance(version, str) and not SEMVER_RE.match(version):
+        add(f"package.json: version must be semver, got {version!r}")
+
+    engines = pkg.get("engines")
+    vscode_range = engines.get("vscode") if isinstance(engines, dict) else None
+    if not isinstance(vscode_range, str) or not VSCODE_RANGE_RE.match(vscode_range):
+        add(
+            "package.json: engines.vscode must be a version range string "
+            "(the mcpServerDefinitionProviders API needs ^1.101.0 or newer)"
+        )
+
+    if pkg.get("dependencies"):
+        add(
+            "package.json: runtime dependencies are not allowed "
+            "(the VSIX is published with --no-dependencies)"
+        )
+
+    main = pkg.get("main")
+    if not isinstance(main, str) or not main.strip():
+        add("package.json: main entry missing")
+    elif not (root / main).is_file():
+        add(f"package.json: main entry file missing: {main}")
+
+    activation = pkg.get("activationEvents")
+    if not isinstance(activation, list) or "onStartupFinished" not in activation:
+        add("package.json: activationEvents must include 'onStartupFinished'")
+
+    icon = pkg.get("icon")
+    if not isinstance(icon, str) or not icon.strip():
+        add("package.json: icon missing (assets/icon.png)")
+    elif icon.startswith("/") or ".." in icon:
+        add(f"package.json: icon must be a relative path, got {icon!r}")
+    elif not (root / icon).is_file():
+        add(f"package.json: icon file missing: {icon}")
+
+    contributes = pkg.get("contributes")
+    providers = (
+        contributes.get("mcpServerDefinitionProviders")
+        if isinstance(contributes, dict)
+        else None
+    )
+    if not isinstance(providers, list) or not providers:
+        add(
+            "package.json: contributes.mcpServerDefinitionProviders must list "
+            f"{MCP_PROVIDER_ID!r}"
+        )
+    else:
+        for provider in providers:
+            if not isinstance(provider, dict):
+                add("package.json: mcpServerDefinitionProviders entries must be objects")
+                continue
+            if not isinstance(provider.get("label"), str) or not provider["label"].strip():
+                add("package.json: mcpServerDefinitionProviders entry needs a label")
+        ids = [p.get("id") for p in providers if isinstance(p, dict)]
+        if MCP_PROVIDER_ID not in ids:
+            add(
+                "package.json: contributes.mcpServerDefinitionProviders must include "
+                f"id {MCP_PROVIDER_ID!r}, got {ids}"
+            )
+
+    source = root / MCP_PROVIDER_SOURCE
+    if not source.is_file():
+        add(f"{MCP_PROVIDER_SOURCE}: missing (registers the MCP server provider)")
+    else:
+        text = source.read_text()
+        if MCP_PROVIDER_ID not in text:
+            add(f"{MCP_PROVIDER_SOURCE}: must register provider {MCP_PROVIDER_ID!r}")
+        if "McpHttpServerDefinition" not in text:
+            add(f"{MCP_PROVIDER_SOURCE}: must return a vscode.McpHttpServerDefinition")
+        if MCP_SERVER_URI not in text:
+            add(f"{MCP_PROVIDER_SOURCE}: must point at {MCP_SERVER_URI}")
+
+    return errors
+
+
 def main() -> int:
+    # --- VS Code / Open VSX extension manifest (root package.json) -------
+    ERRORS.extend(package_manifest_errors(ROOT))
+
     # --- Agent Plugins (open standard) manifest -------------------------
     agent = load_json("plugin.json")
     if agent:
@@ -134,7 +260,7 @@ def main() -> int:
         for e in ERRORS:
             print(f"ERROR: {e}", file=sys.stderr)
         return 1
-    print("OK: manifests, MCP configs, and skill structure valid")
+    print("OK: extension manifest, manifests, MCP configs, and skill structure valid")
     return 0
 
 

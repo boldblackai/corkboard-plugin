@@ -1,0 +1,54 @@
+{
+  "name": "corkboard",
+  "displayName": "Corkboard",
+  "description": "Corkboard wiki integration: connect your agent to your Corkboard workspace through the remote MCP server, plus the bundled CLI skill for page edits, media uploads, and wiki gardening.",
+  "version": "0.1.0",
+  "publisher": "boldblackai",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "corkboard",
+    "wiki",
+    "mcp",
+    "knowledge",
+    "documentation",
+    "notes",
+    "search"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "icon": "assets/icon.png",
+  "homepage": "https://corkboard.wiki/docs/mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/boldblackai/corkboard-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/boldblackai/corkboard-plugin/issues"
+  },
+  "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "corkboardMcpProvider",
+        "label": "Corkboard"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "package": "vsce package --no-dependencies",
+    "test:extension": "node tests/extension_runtime.test.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.101.0",
+    "@vscode/vsce": "^3.6.0",
+    "typescript": "^5.9.2"
+  }
+}

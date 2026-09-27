@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Initial release of the Corkboard extension (`boldblackai.corkboard`) on Open VSX.
+- Initial release of the Corkboard extension (`boldblack.corkboard`) on Open VSX.
 - Contributes the MCP server definition provider `corkboardMcpProvider`
   (label `Corkboard`), a static provider for the remote MCP server at
   `https://corkboard.wiki/mcp`. OAuth 2.1 discovery and consent are handled by

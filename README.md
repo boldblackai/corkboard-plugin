@@ -23,10 +23,10 @@ revision inspection) or when you prefer plain shell commands.
 ## Install (VS Code / Cursor via Open VSX)
 
 This repository ships a VS Code / Cursor extension, listed on
-[Open VSX](https://open-vsx.org/) as `boldblackai.corkboard`:
+[Open VSX](https://open-vsx.org/) as `boldblack.corkboard`:
 
 1. In VS Code or Cursor, open the Extensions view and search for **Corkboard**.
-2. Install **Corkboard** (`boldblackai.corkboard`) and reload the window.
+2. Install **Corkboard** (`boldblack.corkboard`) and reload the window.
 3. Ask your agent for a Corkboard action (for example *list pages*), then
    approve the MCP OAuth prompt on first use.
 

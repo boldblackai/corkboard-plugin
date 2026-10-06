@@ -20,6 +20,22 @@ connected, use it for page reads/writes and search; use the CLI when a task
 needs the fuller command surface (media management, gardening reports,
 revision inspection) or when you prefer plain shell commands.
 
+## Install (VS Code / Cursor via Open VSX)
+
+This repository ships a VS Code / Cursor extension, listed on
+[Open VSX](https://open-vsx.org/) as `boldblack.corkboard`:
+
+1. In VS Code or Cursor, open the Extensions view and search for **Corkboard**.
+2. Install **Corkboard** (`boldblack.corkboard`) and reload the window.
+3. Ask your agent for a Corkboard action (for example *list pages*), then
+   approve the MCP OAuth prompt on first use.
+
+The extension contributes the MCP server definition provider
+`corkboardMcpProvider` (label `Corkboard`), which points at the remote server
+`https://corkboard.wiki/mcp`. OAuth 2.1 discovery and consent are handled by
+the client, so no credentials are stored in the extension. The bundled
+`skills/corkboard` CLI skill is included in the VSIX.
+
 ## Install (Cursor)
 
 Install from the Cursor Marketplace (search "Corkboard"), or add this
@@ -59,6 +75,7 @@ The MCP half works with any MCP client that speaks Streamable HTTP and OAuth
 
 ```
 corkboard-plugin/
+├── package.json              # VS Code / Cursor (Open VSX) extension manifest
 ├── plugin.json               # Agent Plugins (open standard) manifest
 ├── mcp.json                  # Agent Plugins MCP config (streamable-http)
 ├── .cursor-plugin/
@@ -68,12 +85,17 @@ corkboard-plugin/
 │   ├── plugin.json           # Claude Code plugin manifest
 │   └── marketplace.json      # makes this repo a Claude Code marketplace
 ├── .mcp.json                 # Claude Code MCP config (remote connector)
+├── src/
+│   └── extension.ts          # extension entry: registers corkboardMcpProvider
+├── out/
+│   └── extension.js          # committed build of src/extension.ts (shipped)
 ├── skills/
 │   └── corkboard/
 │       ├── SKILL.md          # vendored from boldblackai/corkboard-skill
 │       └── script/           # stdlib-only Python CLI
 ├── assets/
-│   └── logo.svg              # Corkboard orbit mark (BBS-001)
+│   ├── logo.svg              # Corkboard orbit mark (BBS-001)
+│   └── icon.png              # 128x128 marketplace icon (from logo.svg)
 └── scripts/
     └── validate.py           # manifest + structure validator (CI gate)
 ```
@@ -92,16 +114,26 @@ Full CLI reference: [`skills/corkboard/SKILL.md`](skills/corkboard/SKILL.md).
 
 ```bash
 python3 scripts/validate.py    # validate manifests + skill frontmatter
+python3 tests/test_validate.py # validator unit tests (extension manifest checks)
+node tests/extension_runtime.test.js  # compiled entry point, stubbed host API
 
 # vendored-skill test suite (from boldblackai/corkboard-skill)
 cd skills/corkboard
 python3 tests/test_pages_logic.py            # + 3 more test_*.py
 python3 tests/mock_server.py --port 8765 &   # stdlib mock of API v1
 python3 tests/smoke_matrix.py --port 8765    # 43-command CLI matrix
+
+# VSIX build (Open VSX / VS Code). The committed out/extension.js is the
+# compiled src/extension.ts; regenerate it after editing the source:
+cd "$(git rev-parse --show-toplevel)"
+npm install            # devDependencies only; no runtime dependencies
+npm run compile        # tsc -p tsconfig.json -> out/extension.js
+npx @vscode/vsce package --no-dependencies   # -> corkboard-<version>.vsix
 ```
 
-CI runs the validator, a stdlib-only import audit over script + tests,
-the four unit suites, and the mock-server command matrix on every push.
+CI runs the validator, the validator unit tests, a stdlib-only import audit
+over script + tests, the four unit suites, the mock-server command matrix, the
+extension entry point test, and `vsce package --no-dependencies` on every push.
 
 The `skills/corkboard/` subtree is vendored from
 [boldblackai/corkboard-skill](https://github.com/boldblackai/corkboard-skill).

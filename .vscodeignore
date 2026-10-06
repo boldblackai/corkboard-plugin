@@ -1,0 +1,24 @@
+# Files kept out of the VSIX. The published package contains the extension
+# manifest, README, CHANGELOG, LICENSE, assets/, and the vendored skills/
+# subtree. Patterns follow .gitignore semantics (a slash anchors to the root).
+
+# Agent / editor plugin manifests and CI
+.github/**
+.cursor-plugin/**
+.claude-plugin/**
+
+# Development-only sources and tooling
+scripts/**
+tests/**
+src/**
+tsconfig.json
+**/*.ts
+**/*.map
+
+# Dotfiles and local noise
+.gitignore
+.vscodeignore
+.mcp.json
+**/.DS_Store
+**/__pycache__/**
+**/*.pyc

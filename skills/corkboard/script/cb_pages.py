@@ -46,17 +46,25 @@ def parse_edits_file(content):
     """Parse a tab-separated edits file.
 
     Each non-empty line is split on the first tab into (old, new).
-    Empty lines and lines without a tab are skipped.
+    Empty lines are skipped.  A non-empty line WITHOUT a tab is a hard
+    error: in practice it is a continuation line of a multi-line field
+    (the file format has no multi-line syntax), and silently skipping it
+    would truncate an edit half-applied while still reporting success.
 
     Returns a list of (old, new) tuples.
     """
     pairs = []
-    for line in content.splitlines():
+    for lineno, line in enumerate(content.splitlines(), start=1):
         line = line.strip("\r")
-        if not line:
+        if not line.strip():
             continue
         if "\t" not in line:
-            continue
+            raise CorkboardError(
+                "edits file line %d has no tab (every line must be "
+                "`old<TAB>new`; multi-line old/new fields are not "
+                "supported — continuation lines land here): %r"
+                % (lineno, line[:60])
+            )
         old, new = line.split("\t", 1)
         pairs.append((old, new))
     return pairs

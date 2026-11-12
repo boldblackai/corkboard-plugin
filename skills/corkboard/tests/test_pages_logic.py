@@ -168,6 +168,39 @@ def test_edit_edits_file_format():
     pairs = parse_edits_file("a\tb\n")
     _check(pairs == [("a", "b")], f"single line with trailing newline: {pairs}")
 
+    # Blank lines are still skipped (spacing between pairs is fine)
+    pairs = parse_edits_file("a\tb\n\n \nc\td\n")
+    _check(pairs == [("a", "b"), ("c", "d")], f"blank lines skipped: {pairs}")
+
+
+def test_edit_edits_file_rejects_tabless_lines():
+    """A non-empty line without a tab must fail loud, not be skipped.
+
+    A multi-line old/new field's continuation lines land here; skipping
+    them silently truncates the edit half-applied while the command
+    still reports success.
+    """
+    from cb_pages import parse_edits_file
+    from cb_client import CorkboardError
+
+    # Continuation line after a valid pair
+    content = "old\tnew first line only\ncontinuation with no tab\n"
+    try:
+        parse_edits_file(content)
+        _check(False, "tabless continuation line must raise")
+    except CorkboardError as e:
+        msg = str(e)
+        _check("line 2" in msg, f"error must name the line number: {msg}")
+        _check("continuation" in msg, f"error must quote the line: {msg}")
+
+    # CRLF file whose last line lost its pair (stray text)
+    content = "old\tnew\r\nstray line\r\n"
+    try:
+        parse_edits_file(content)
+        _check(False, "tabless stray line must raise")
+    except CorkboardError:
+        pass
+
 
 # ---------------------------------------------------------------------------
 # resolve_anchor tests (insert)

@@ -182,6 +182,14 @@ every `--old` string must appear exactly once in the page body.  This
 prevents accidental or ambiguous replacements.  The `insert` command
 requires the anchor line to match exactly one line.
 
+An `--edits` file is one `old<TAB>new` pair per physical line: blank
+lines are skipped, but a non-empty line without a tab is a hard error
+(it is almost always a continuation line of a multi-line field — the
+format has no multi-line syntax — and silently skipping it would
+truncate the edit half-applied while still reporting success).  For
+multi-line edits, pass each pair as `--old`/`--new`, or replace the
+whole body with `put --file`.
+
 ### Gardening
 
 Keep the workspace healthy with periodic sweeps:
